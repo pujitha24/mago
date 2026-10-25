@@ -254,7 +254,13 @@ where
                         result.has_invalid_target = true;
                     }
 
-                    report_call_on_non_object(context, object_atomic, object.span(), selector);
+                    report_call_on_non_object(
+                        context,
+                        object_atomic,
+                        &object_type.get_id().to_string(),
+                        object.span(),
+                        selector,
+                    );
                     continue;
                 }
             };
@@ -382,7 +388,7 @@ where
     } else {
         result.has_invalid_target = true;
         result.encountered_mixed = true;
-        report_call_on_non_object(context, &TAtomic::Mixed(TMixed::new()), object.span(), selector);
+        report_call_on_non_object(context, &TAtomic::Mixed(TMixed::new()), "mixed", object.span(), selector);
     }
 
     for method_id in asserted_descendant_method_references {
@@ -882,6 +888,7 @@ where
 fn report_call_on_non_object<A>(
     context: &mut Context<'_, '_, A>,
     atomic_type: &TAtomic,
+    object_type_str: &str,
     obj_span: Span,
     selector: &ClassLikeMemberSelector,
 ) where
@@ -900,7 +907,7 @@ fn report_call_on_non_object<A>(
         Issue::error(issue_msg)
             .with_annotation(Annotation::primary(selector.span()).with_message("Cannot call method here"))
             .with_annotation(
-                Annotation::secondary(obj_span).with_message(format!("This expression has type `{type_str}`")),
+                Annotation::secondary(obj_span).with_message(format!("This expression has type `{object_type_str}`")),
             ),
     );
 }
